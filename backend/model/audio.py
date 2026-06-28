@@ -6,6 +6,9 @@ class Songs():
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     channel = Column(String)
+    url = Column(String)
+    audio_url = Column(String)
+
 
 class AudioHashes():
     __tablename__ = "audio_hashes"

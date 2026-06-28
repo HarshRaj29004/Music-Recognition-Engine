@@ -1,14 +1,26 @@
 import shutil
 import os
 import uuid
-from fastapi import APIRouter, UploadFile, File,  HTTPException,Body
+from fastapi import APIRouter, UploadFile, File, HTTPException, Body
 from db.db import db
 from audio.AudioProcessing import AudioProcessing
-from pydub import AudioSegment,effects
+from pydub import AudioSegment, effects
 import yt_dlp
 import subprocess
+import cloudinary.uploader
 
 router = APIRouter()
+
+@router.get("/songs")
+async def get_all_songs():
+    try:
+        res = db.table("songs").select("*").order("id", desc=True).execute()
+        return {"songs": res.data or []}
+    except Exception as e:
+        print("WARNING/ERROR fetching songs from Supabase:", str(e))
+        return {"songs": [], "warning": "Database table 'songs' not found or empty."}
+
+
 
 SAMPLE_RATE = 44100
 SAMPLE_WIDTH = 2  
@@ -136,22 +148,26 @@ async def audio_upload(url: str = Body(..., embed=True)):
                         ]
 
                         if hash_pairs:
-                            res = db.rpc(
-                                "match_audio",
-                                {"input_hashes": hash_pairs}
-                            ).execute()
+                            try:
+                                res = db.rpc(
+                                    "match_audio",
+                                    {"input_hashes": hash_pairs}
+                                ).execute()
 
-                            if res.data and res.data[0]["score"] >= 25:
-                                print("MATCH FOUND!!. Stopping stream.")
+                                if res.data and res.data[0]["score"] >= 25:
+                                    print("MATCH FOUND!!. Stopping stream.")
 
-                                process.kill()
-                                process.wait(timeout=3)
+                                    process.kill()
+                                    process.wait(timeout=3)
 
-                                return {
-                                    "status": "Already Exists",
-                                    "song_id": res.data[0]["song_id"],
-                                    "title": res.data[0]["title"]
-                                }
+                                    return {
+                                        "status": "Already Exists",
+                                        "song_id": res.data[0]["song_id"],
+                                        "title": res.data[0]["title"]
+                                    }
+                            except Exception as rpc_err:
+                                print("Supabase RPC preview check skipped:", str(rpc_err))
+
 
                         print("*NO MATCH FOUND*")
 
@@ -174,11 +190,27 @@ async def audio_upload(url: str = Body(..., embed=True)):
         processor.converting_to_frequency_domain()
         final_hashes = processor.hashing()
 
+        # *****CLOUDINARY UPLOAD*****
+        cloud_audio_url = None
+        try:
+            print("*UPLOADING TO CLOUDINARY*")
+            c_res = cloudinary.uploader.upload(
+                final_file,
+                resource_type="video",
+                folder="shazam_songs"
+            )
+            cloud_audio_url = c_res.get("secure_url")
+            print(f"Uploaded to Cloudinary: {cloud_audio_url}")
+        except Exception as c_err:
+            print("Cloudinary upload warning/error:", str(c_err))
+
         song_res = db.table("songs").insert({
             "title": title,
             "channel": channel,
             "url": youtube_url,
+            "audio_url": cloud_audio_url
         }).execute()
+
 
         song_id = song_res.data[0]["id"]
         hash_payload = [

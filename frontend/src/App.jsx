@@ -1,15 +1,16 @@
 import { useState } from 'react'
+import { Toaster } from 'react-hot-toast'
 import './App.css'
 import AudioRecord from './pages/audioRecord'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
     <>
-    <AudioRecord />
+      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+      <AudioRecord />
     </>
   )
 }
 
 export default App
+
