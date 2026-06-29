@@ -5,23 +5,20 @@ from pydub import AudioSegment
 from scipy.ndimage import maximum_filter
 import os
 
-
-
 class AudioProcessing:
-    def __init__(self,audio_file_path: str):
+    def __init__(self, audio_file_path: str):
         audio_path = audio_file_path
         audio = AudioSegment.from_file(audio_path)
-        output_file,extension = os.path.splitext(audio_path)
-        output_file+=".wav"
-        if not audio_path.endswith(".wav") :
+        output_file, extension = os.path.splitext(audio_path)
+        output_file += ".wav"
+        if not audio_path.endswith(".wav"):
             audio.export(output_file, format="wav")
-        self.sampling_rate,self.digital_audio = wavfile.read(output_file)
+        self.sampling_rate, self.digital_audio = wavfile.read(output_file)
         self.Norm_int16 = 32768.0
         self.Norm_int32 = 2147483648.0
         self.mult = 2.28
-        # print(output_file)
 
-    def Normalise(self,data: list):
+    def Normalise(self, data):
         if data.dtype == np.int16:
             data = data.astype(np.float32) / self.Norm_int16
         elif data.dtype == np.int32:
@@ -29,26 +26,37 @@ class AudioProcessing:
         return data
     
     def converting_to_frequency_domain(self):
-            if len(self.digital_audio.shape) > 1:
-                self.digital_audio = self.digital_audio.mean(axis=1)
-            print(self.digital_audio)
-            data = self.Normalise(self.digital_audio)
-            # print(data)
-            f, t, spd = spectrogram(data, fs=self.sampling_rate, nperseg=4096, noverlap=2048, window='hann')
-            self.freq = f
-            self.time = t
-            self.spectral_density = 10 * np.log10(spd + 1e-10)
+        if self.digital_audio is None or len(self.digital_audio) == 0:
+            raise ValueError("Audio sample contains no data.")
+
+        if len(self.digital_audio.shape) > 1:
+            self.digital_audio = self.digital_audio.mean(axis=1)
+
+        data = self.Normalise(self.digital_audio)
+        
+        # Ensure minimum length for spectrogram computation
+        if len(data) < 4096:
+            # Pad with zeros if less than nperseg
+            data = np.pad(data, (0, 4096 - len(data)), mode='constant')
+
+        f, t, spd = spectrogram(data, fs=self.sampling_rate, nperseg=4096, noverlap=2048, window='hann')
+        self.freq = f
+        self.time = t
+        self.spectral_density = 10 * np.log10(spd + 1e-10)
 
     def constellation_map(self):
-        mean = np.mean(self.spectral_density, axis = 1, keepdims=True)
-        standard_dev = np.std(self.spectral_density, axis = 1, keepdims=True)
-        threshold = mean + self.mult*standard_dev
+        if self.spectral_density.shape[1] == 0:
+            return []
+
+        mean = np.mean(self.spectral_density, axis=1, keepdims=True)
+        standard_dev = np.std(self.spectral_density, axis=1, keepdims=True)
+        threshold = mean + self.mult * standard_dev
          
-        local_max = maximum_filter(self.spectral_density, size = (25,80))
+        local_max = maximum_filter(self.spectral_density, size=(25, 80))
         is_peak = (self.spectral_density == local_max)
         is_loud = (self.spectral_density >= threshold)
         peaks = (is_loud & is_peak)
-        f,t = np.where(peaks)
+        f, t = np.where(peaks)
         peaks_list = list(zip(t, f))
         peaks_list.sort() 
         return peaks_list
@@ -58,15 +66,15 @@ class AudioProcessing:
         valid_len = 20
         finger_P = []
         for i in range(len(peaks)):
-            ti,fi = peaks[i]
-            for j in range(1,valid_len+1):
-                if i+j>=len(peaks):
+            ti, fi = peaks[i]
+            for j in range(1, valid_len + 1):
+                if i + j >= len(peaks):
                     break
-                tj,fj = peaks[i+j]
+                tj, fj = peaks[i + j]
                 del_t = tj - ti
-                if 0<=del_t<=200:
-                    hash = [fi,fj,(tj-ti)]
-                    finger_P.append([hash,ti])
+                if 0 <= del_t <= 200:
+                    hash_val = [fi, fj, (tj - ti)]
+                    finger_P.append([hash_val, ti])
         return finger_P
 
     def encode_hash(self, f1, f2, dt):

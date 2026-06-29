@@ -16,6 +16,8 @@ async def audio_upload(url: str = Body(..., embed=True)):
     """Downloads, verifies, uploads, and indexes a YouTube track via indexing_service."""
     try:
         return process_and_index_track(url)
+    except HTTPException as http_ex:
+        raise http_ex
     except Exception as e:
         print("ERROR in audio_upload route:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
@@ -26,6 +28,8 @@ async def identify_song(file: UploadFile = File(...)):
     """Preprocesses recorded audio and matches fingerprints via identification_service."""
     try:
         return identify_audio_sample(file)
+    except HTTPException as http_ex:
+        raise http_ex
     except Exception as e:
         print("SERVER ERROR in identify_song route:", str(e))
         raise HTTPException(status_code=500, detail="Internal Server Error")

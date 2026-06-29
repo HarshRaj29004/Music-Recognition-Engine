@@ -1,361 +1,144 @@
-# Music-Recognition-Engine System
+# Soundify - Music Recognition Engine & Cloud Player 🎵
 
-A full-stack audio fingerprinting application that identifies songs using advanced signal processing and machine learning. This project implements the Shazam algorithm to create unique audio fingerprints and match them against a database of known songs.
+A full-stack acoustic fingerprinting and streaming platform that identifies ambient songs and plays curated audio tracks. Inspired by the Shazam spectral analysis algorithm, Soundify creates unique acoustic constellation fingerprints and matches them in real-time against a database of stored tracks.
 
-## 📸 Screenshots & Demo
+---
 
-Add your application screenshots and demo images here:
+## 🎵 Key Features
 
-| Feature | Image |
-|---------|-------|
-| Audio Upload Interface | ![Upload](./docs/images/upload.png) |
-| Fingerprint Visualization | ![Fingerprints](./docs/images/fingerprints.png) |
-| Song Match Results | ![Results](./docs/images/results.png) |
+- **🎙️ Acoustic Shazam Engine**: Record live ambient audio through your microphone to extract spectral constellation peaks and identify matching songs in real-time.
+- **🎧 Cloud Audio Library**: Stream full-length audio tracks stored in high-fidelity cloud storage with custom playback, timeline seeking, and volume controls.
+- **➕ YouTube Track Ingestion**: Enter any YouTube video URL to automatically process audio, extract acoustic fingerprints, and add the track to your streaming library.
+- **⚡ Early Duplicate Checking**: Smart preview matching analyzes the first 30 seconds of ingested tracks to prevent duplicate database entries and save processing time.
+- **✨ Modular Service Architecture**: Cleanly decoupled FastAPI backend services paired with a modern glassmorphism React + Tailwind frontend.
 
-
-## 🎵 Features
-
-- **Audio Fingerprinting**: Generate unique audio fingerprints using spectral analysis and peak detection
-- **Song Identification**: Match audio samples against a database of fingerprints
-- **YouTube Integration**: Download and process audio directly from YouTube URLs
-- **Real-time Processing**: Stream audio processing with chunked data handling
-- **Interactive Web Interface**: User-friendly React frontend for audio recording and uploads
-- **Database Storage**: Supabase cloud database for storing fingerprints and metadata
-- **RESTful API**: FastAPI-based backend with CORS support
+---
 
 ## 🏗️ Project Structure
 
-```
-Music-Recognition-Engine/
-├── backend/                          # FastAPI backend server
-│   ├── main.py                      # FastAPI application entry point
+```text
+shazam/
+├── backend/                          # FastAPI Backend Application
+│   ├── main.py                      # Application entrypoint & CORS middleware
 │   ├── audio/
-│   │   ├── AudioProcessing.py       # Core audio fingerprinting algorithm
-│   │   └── testing.py               # Audio processing tests
+│   │   ├── AudioProcessing.py       # Core spectral analysis & peak hashing
+│   │   └── testing.py               # Algorithm verification tests
+│   ├── services/                    # Modular Business Service Layer
+│   │   ├── song_service.py          # Track library retrieval
+│   │   ├── indexing_service.py      # YouTube audio processing & DB indexing
+│   │   └── identification_service.py # Microphone clip preprocessing & matching
 │   ├── route/
-│   │   └── route.py                 # API route handlers
+│   │   └── route.py                 # Lightweight API routing delegators
 │   ├── db/
-│   │   └── db.py                    # Database client initialization
-│   ├── model/
-│   │   └── audio.py                 # Data models
-│   └── .env                         # Database configs
-├── frontend/                        # React + Vite frontend
+│   │   └── db.py                    # Supabase & Cloudinary client setup
+│   ├── utils/
+│   │   └── utils.py                 # File handling & yt-dlp audio extraction
+│   └── model/
+│       └── audio.py                 # Data models
+├── frontend/                        # React + Vite Frontend Application
 │   ├── src/
-│   │   ├── App.jsx                  # Main application component
+│   │   ├── App.jsx                  # Root layout & toast notifications
 │   │   ├── pages/
-│   │   │   └── audioRecord.jsx      # Audio recording interface
-│   │   └── assets/                  # Static assets
+│   │   │   └── audioRecord.jsx      # Music library, Shazam recorder & uploader
+│   │   └── assets/                  # Styling & static assets
 │   ├── package.json                 # Frontend dependencies
-|   └── .env                         # backend route(optional)
-└── docker-compose.yml               # PostgreSQL database configuration
+│   └── vite.config.js               # Vite bundler configuration
+└── docker-compose.yml               # Container deployment setup
 ```
+
+---
 
 ## 🔧 Tech Stack
 
 ### Backend
-- **FastAPI**: Modern Python web framework for building APIs
-- **LibROSA**: Audio analysis library
-- **SciPy**: Signal processing
-- **OpenCV**: Image/audio processing utilities
-- **Pydub**: Audio file conversion
-- **yt-dlp**: YouTube audio downloading
-- **SQLAlchemy**: ORM for database operations
-- **Supabase/PostgreSQL**: Database for storing fingerprints
+* **FastAPI**: Asynchronous Python web API framework.
+* **SciPy & NumPy**: Fast Fourier Transform (FFT), spectrogram generation, and 2D maximum filtering.
+* **Pydub & FFmpeg**: Audio format conversion, channel standardization, and volume normalization.
+* **yt-dlp**: YouTube audio extraction and download management.
+* **Supabase (PostgreSQL)**: Cloud database storing song metadata and bit-packed fingerprint hashes.
+* **Cloudinary**: Cloud media storage hosting streamable track audio files.
 
 ### Frontend
-- **React 19**: UI library
-- **Vite**: Build tool and dev server
-- **Tailwind CSS**: Styling framework
-- **React Hot Toast**: Notifications
-
-## 📋 Prerequisites
-
-**Option 1: Docker (Recommended - Easiest)**
-- Docker Desktop
-- Docker Compose
-- Supabase account with API credentials
-
-**Option 2: Manual Setup**
-- Python 3.8+
-- Node.js 16+
-- FFmpeg (for audio processing)
-- Supabase account with API credentials
-
-## 🚀 Installation
-
-### 1. Clone the Repository
-```bash
-git clone <repository-url>
-cd Music-Recognition-Engine
-```
-
-### Option A: Using Docker (Recommended) 🐳
-
-The easiest way to run the entire application with automatic dependency installation:
-
-**Step 1**: Create a `.env` file 
-
-**Step 2**: Update the `.env` file with your Supabase credentials
-```env
-SUPABASE_URL=<your-supabase-url>
-SUPABASE_KEY=<your-supabase-key>
-```
-
-**Step 3**: Start all services with a single command
-```bash
-docker-compose up --build
-```
-
-This will:
-- ✅ Build and start FastAPI backend (with all Python dependencies)
-- ✅ Build and start React frontend (with all Node dependencies)
-- ✅ Automatically install all required packages
-- ✅ Set up networking between services
-- ✅ Connect to Supabase (no local database needed)
-
-**Access the application:**
-- Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:8000`
-- API Docs: `http://localhost:8000/docs`
-
-**Stop all services:**
-```bash
-docker-compose down
-```
-
-**View logs:**
-```bash
-docker-compose logs -f backend    # Backend logs
-docker-compose logs -f frontend   # Frontend logs
-```
+* **React 19 & Vite**: Ultra-fast single page interface.
+* **Tailwind CSS**: Sleek modern dark-mode styling with glassmorphism effects.
+* **HTML5 Audio API**: Integrated persistent bottom audio player.
+* **React Hot Toast**: Real-time interactive user feedback notifications.
 
 ---
 
-### Option B: Manual Setup (without Docker)
+## 🚀 Getting Started
 
-#### 2. Backend Setup
+### Prerequisites
+* **Python 3.8+**
+* **Node.js 18+**
+* **FFmpeg** (Installed and added to System PATH)
 
-Navigate to the backend directory and install Python dependencies:
+---
+
+### 1. Backend Setup
 
 ```bash
 cd backend
-pip install -r ../requirements.txt
+# Activate virtual environment
+python -m venv venv
+.\venv\Scripts\activate      # Windows
+# source venv/bin/activate   # macOS/Linux
+
+# Install Python dependencies
+pip install -r requirements.txt
+pip install -U yt-dlp        # Ensure latest yt-dlp build
 ```
 
-Create a `.env` file with your Supabase credentials:
+Create a `.env` file inside the `backend/` directory:
 ```env
 SUPABASE_URL=<your-supabase-url>
 SUPABASE_KEY=<your-supabase-key>
+CLOUDINARY_CLOUD_NAME=<your-cloudinary-cloud-name>
+CLOUDINARY_API_KEY=<your-cloudinary-api-key>
+CLOUDINARY_API_SECRET=<your-cloudinary-api-secret>
+Frontend_url=http://localhost:5173
 ```
 
-#### 3. Frontend Setup
+Start the backend server:
+```bash
+python main.py
+```
+The FastAPI server will start at `http://localhost:8000`.
 
-Navigate to the frontend directory and install Node dependencies:
+---
 
+### 2. Frontend Setup
+
+In a new terminal:
 ```bash
 cd frontend
 npm install
-```
-
-#### 4. Running the Application (Manual)
-
-In one terminal, start the backend:
-```bash
-cd backend
-python main.py
-```
-
-The backend will run on `http://localhost:8000`
-
-In another terminal, start the frontend:
-```bash
-cd frontend
 npm run dev
 ```
-
-The frontend will run on `http://localhost:5173`
-
----
-
-## 📚 Docker Deployment Details
-
-### Docker Services Architecture
-
-```
-┌─────────────────────────────────────┐
-│     Docker Compose Network          │
-├─────────────────────────────────────┤
-│  Frontend (Node.js)                 │
-│  - Port: 5173                       │
-│  - Auto-installs dependencies       │
-│  - Hot reload enabled               │
-├─────────────────────────────────────┤
-│  Backend (Python/FastAPI)           │
-│  - Port: 8000                       │
-│  - Auto-installs dependencies       │
-│  - FFmpeg pre-installed             │
-├─────────────────────────────────────┤
-│  Supabase (Cloud Database)          │
-│  - Remote PostgreSQL instance       │
-│  - No local setup needed            │
-└─────────────────────────────────────┘
-```
-
-### Docker Commands Reference
-
-```bash
-# Start all services
-docker-compose up --build
-
-# Start in background
-docker-compose up -d --build
-
-# Stop all services
-docker-compose down
-
-# View logs
-docker-compose logs -f
-
-# Rebuild a specific service
-docker-compose up --build backend
-
-# Execute command in running container
-docker-compose exec backend bash
-docker-compose exec frontend bash
-```
+The React application will run at `http://localhost:5173`.
 
 ---
 
-## 📡 API Endpoints
+## 📡 API Reference
 
-### Health Check
-- `GET /` - Server status
+| Endpoint | Method | Description | Request Body |
+| :--- | :--- | :--- | :--- |
+| `/` | `GET` | Server health check | None |
+| `/songs` | `GET` | Retrieves all curated library tracks | None |
+| `/audio_upload` | `POST` | Processes & indexes a YouTube track | `{"url": "https://youtube.com/..."}` |
+| `/identify` | `POST` | Matches recorded audio sample against fingerprints | `multipart/form-data` (`file`) |
 
-### Audio Upload & Processing
-- `POST /audio_upload` - Upload audio from YouTube URL
-  - Request body: `{"url": "youtube_url"}`
-- `POST /identify` - Upload recorded audio 
+---
 
-### Audio Fingerprinting
-- Process uploaded audio and generate fingerprints
-- Store fingerprints in database
-- Match against existing fingerprints
+## 🧠 How the Acoustic Fingerprinting Works
 
-## 🎤 How It Works
+1. **Spectrogram Generation**: Converts raw 44.1kHz mono audio samples into a time-frequency log spectrogram using Short-Time Fourier Transform (STFT).
+2. **Constellation Mapping**: Extracts local spectral peak maxima using a 2D uniform filter (`scipy.ndimage.maximum_filter`) filtered by dynamic volume thresholding.
+3. **Combinatorial Hashing**: Links pairs of peak frequencies (`f1`, `f2`) and time differences (`dt`) into 32-bit uint integers.
+4. **RPC Match Scoring**: Queries Supabase PostgreSQL RPC (`match_audio`) to calculate offset consistency scores across stored candidate tracks.
 
-### 1. Audio Fingerprinting Algorithm
-
-The fingerprinting process consists of several steps:
-
-**Spectral Analysis**:
-- Convert audio to frequency domain using FFT
-- Generate spectrogram with normalized values
-- Normalize using standard deviation and mean
-
-**Peak Detection**:
-- Identify local maxima in the spectrogram
-- Filter peaks based on loudness threshold
-- Create constellation map of peaks
-
-**Hashing**:
-- Generate anchor points from peak pairs
-- Create hashes from frequency pairs and time deltas
-- Encode hashes for efficient database storage
-
-**Matching**:
-- Compare input fingerprint against database
-- Count hash matches to identify songs
-
-### 2. Audio Processing Pipeline
-
-1. **File Conversion**: Convert audio to standard WAV format
-2. **Streaming**: Process audio in chunks for memory efficiency
-3. **FFmpeg Integration**: Stream YouTube audio at specified sample rate
-4. **Normalization**: Normalize audio levels for consistent fingerprinting
-
-## 🔑 Key Components
-
-### AudioProcessing Class
-Handles all audio processing and fingerprinting:
-- `converting_to_frequency_domain()` - FFT and spectrogram generation
-- `constellation_map()` - Peak detection
-- `fingerPrinting()` - Anchor point generation
-- `hashing()` - Hash encoding
-- `encode_hash()` - Bit-packing for efficient storage
-
-### API Routes
-- Audio upload and processing
-- YouTube integration with streaming
-- Database operations
-- Fingerprint matching
-
-## 📊 Configuration
-
-Key parameters in `route.py`:
-```python
-SAMPLE_RATE = 44100        # Hz
-SAMPLE_WIDTH = 2           # Bytes
-CHANNELS = 1               # Mono
-CHUNK_DURATION_SEC = 5     # Seconds per chunk
-BATCH = 1000               # Database batch size
-```
-
-## 🐛 Troubleshooting
-
-### FFmpeg Not Found
-Install FFmpeg:
-- **Windows**: `choco install ffmpeg`
-- **macOS**: `brew install ffmpeg`
-- **Linux**: `apt-get install ffmpeg`
-
-### Database Connection Error
-Ensure PostgreSQL is running:
-```bash
-docker-compose ps
-```
-
-### CORS Issues
-Update `allow_origins` in `backend/main.py` with your frontend URL
-
-## 📝 Development
-
-### Running Tests
-```bash
-cd backend
-python audio/testing.py
-```
-
-### Building Frontend
-```bash
-cd frontend
-npm run build
-```
-
-### Linting
-```bash
-cd frontend
-npm run lint
-```
-
-## 🔐 Security Notes
-
-- Update default PostgreSQL password in `docker-compose.yml`
-- Restrict CORS origins in production
-- Validate API inputs
-- Use environment variables for sensitive data
+---
 
 ## 📄 License
 
 This project is open source and available under the MIT License.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit pull requests or open issues for bugs and feature requests.
-
-## 📚 References
-
-- [Shazam's Algorithm](https://en.wikipedia.org/wiki/Shazam_(service))
-- [Audio Fingerprinting](https://en.wikipedia.org/wiki/Audio_fingerprint)
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [React Documentation](https://react.dev/)
-- [LibROSA Documentation](https://librosa.org/)

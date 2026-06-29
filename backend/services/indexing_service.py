@@ -1,23 +1,20 @@
 import os
 import uuid
 from pydub import AudioSegment
+from fastapi import HTTPException
 import cloudinary.uploader
 from db.db import db
 from audio.AudioProcessing import AudioProcessing
-from utils.utils import (
-    READ_SIZE, CHUNK_SIZE, SAMPLE_RATE, SAMPLE_WIDTH, CHANNELS, BATCH, downloading_song
-)
+from utils.utils import BATCH, downloading_song
 
-def check_preview_match(full_audio: bytearray):
-    """Generates a temporary WAV from buffered audio to check for an early database match."""
-    preview_file = f"temp_chunk_{uuid.uuid4()}.wav"
+def check_preview_match(wav_file_path: str):
+    """Checks the first 30 seconds of downloaded audio against existing DB fingerprints."""
+    preview_file = f"temp_preview_{uuid.uuid4()}.wav"
     try:
-        AudioSegment(
-            data=bytes(full_audio),
-            sample_width=SAMPLE_WIDTH,
-            frame_rate=SAMPLE_RATE,
-            channels=CHANNELS
-        ).export(preview_file, format="wav")
+        audio = AudioSegment.from_file(wav_file_path)
+        # Take first 30 seconds (30,000 ms)
+        preview_clip = audio[:30000]
+        preview_clip.export(preview_file, format="wav")
 
         processor = AudioProcessing(preview_file)
         processor.converting_to_frequency_domain()
@@ -33,7 +30,7 @@ def check_preview_match(full_audio: bytearray):
             try:
                 res = db.rpc("match_audio", {"input_hashes": hash_pairs}).execute()
                 if res.data and res.data[0]["score"] >= 25:
-                    print(f"MATCH FOUND ({res.data[0]['title']})! Stopping stream early.")
+                    print(f"MATCH FOUND ({res.data[0]['title']})! Skipping full re-indexing.")
                     return {
                         "status": "Already Exists",
                         "song_id": res.data[0]["song_id"],
@@ -81,50 +78,22 @@ def index_hashes_to_db(song_id: int, final_hashes: dict):
 
 
 def process_and_index_track(url: str):
-    """Main service workflow for streaming, checking, uploading, and indexing a YouTube track."""
-    process = None
-    buffer = bytearray()
-    full_audio = bytearray()
-    chunk_count = 0
+    """Main service workflow for downloading, preview matching, uploading, and indexing a YouTube track."""
     final_file = None
-
     try:
-        process, title, channel, youtube_url = downloading_song(url)
+        # 1. Download & convert audio to WAV
+        final_file, title, channel, youtube_url = downloading_song(url)
 
-        # 1. Chunk streaming & processing
-        while True:
-            data = process.stdout.read(READ_SIZE)
-            if not data:
-                print("*STREAM ENDED*")
-                break
+        if not os.path.exists(final_file) or os.path.getsize(final_file) == 0:
+            raise HTTPException(status_code=400, detail="Downloaded audio file is empty or corrupted.")
 
-            buffer.extend(data)
+        # 2. Early preview match check
+        early_match = check_preview_match(final_file)
+        if early_match:
+            return early_match
 
-            while len(buffer) >= CHUNK_SIZE:
-                chunk = buffer[:CHUNK_SIZE]
-                buffer = buffer[CHUNK_SIZE:]
-                chunk_count += 1
-                full_audio.extend(chunk)
-
-                # Periodic preview match (every 10 chunks)
-                if chunk_count % 10 == 0:
-                    early_match = check_preview_match(full_audio)
-                    if early_match:
-                        process.kill()
-                        process.wait(timeout=3)
-                        return early_match
-
-        # 2. Export full track for indexing
+        # 3. Extract spectral hashes from full song
         print("*INDEXING FULL SONG*")
-        final_file = f"temp_final_{uuid.uuid4()}.wav"
-        AudioSegment(
-            data=bytes(full_audio),
-            sample_width=SAMPLE_WIDTH,
-            frame_rate=SAMPLE_RATE,
-            channels=CHANNELS
-        ).export(final_file, format="wav")
-
-        # 3. Extract spectral hashes
         processor = AudioProcessing(final_file)
         processor.converting_to_frequency_domain()
         final_hashes = processor.hashing()
@@ -154,11 +123,6 @@ def process_and_index_track(url: str):
             "song_id": song_id,
             "title": title
         }
-
-    except Exception as e:
-        if process and process.poll() is None:
-            process.kill()
-        raise e
 
     finally:
         if final_file and os.path.exists(final_file):

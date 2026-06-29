@@ -1,9 +1,8 @@
 import os
 import shutil
-import subprocess
 import uuid
 from pydub import AudioSegment
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException
 import yt_dlp
 
 SAMPLE_RATE = 44100
@@ -23,11 +22,9 @@ def temp_file_upload(file: UploadFile) -> str:
     final_wav_path = f"temp_{unique_id}.wav"
 
     try:
-        # DUMPED TO DISK
         with open(raw_tmp_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # CONVERTER
         track = AudioSegment.from_file(raw_tmp_path)
         track.export(final_wav_path, format="wav")
         return final_wav_path
@@ -38,44 +35,53 @@ def temp_file_upload(file: UploadFile) -> str:
             os.remove(raw_tmp_path)
 
 
-
-
 def downloading_song(url: str):
+    """Downloads YouTube audio reliably via yt_dlp with chunk retries and exports a standardized WAV file."""
+    unique_id = uuid.uuid4()
+    raw_template = f"temp_yt_raw_{unique_id}.%(ext)s"
+    
     ydl_opts = {
-        "format": "bestaudio/best",
-        "quiet": True,
-        "no_warnings": True,
-        "noplaylist": True,
+        'format': 'bestaudio/best',
+        'outtmpl': raw_template,
+        'quiet': True,
+        'no_warnings': True,
+        'noplaylist': True,
+        'retries': 10,
+        'fragment_retries': 10,
+        'skip_unavailable_fragments': True,
+        'buffersize': 1024 * 1024,
+        'http_chunk_size': 1048576,
+        'js_runtimes': {'node': {}},
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['tv', 'mweb', 'android', 'web']
+            }
+        }
     }
 
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info = ydl.extract_info(url, download=False)
-        stream_url = info["url"]
-        title = info.get("title", "Unknown")
-        channel = info.get("uploader", "Unknown")
-        yt_url = info.get("webpage_url")
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            title = info.get("title", "Unknown Track")
+            channel = info.get("uploader", "Unknown Artist")
+            yt_url = info.get("webpage_url", url)
+            raw_file = ydl.prepare_filename(info)
+    except Exception as e:
+        print("yt_dlp download error:", str(e))
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Unable to download audio from YouTube URL. Error: {str(e)}"
+        )
 
-    ffmpeg_cmd = [
-        "ffmpeg",
-        "-loglevel", "error",
-        "-reconnect", "1",
-        "-reconnect_streamed", "1",
-        "-reconnect_delay_max", "5",
-        "-vn",
-        "-i", stream_url,
-        "-f", "s16le",
-        "-acodec", "pcm_s16le",
-        "-ar", str(SAMPLE_RATE),
-        "-ac", str(CHANNELS),
-        "-"
-    ]
+    final_wav = f"temp_yt_{unique_id}.wav"
+    try:
+        if not os.path.exists(raw_file) or os.path.getsize(raw_file) == 0:
+            raise HTTPException(status_code=400, detail="Downloaded audio file is empty.")
 
-    process = subprocess.Popen(
-        ffmpeg_cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
-        bufsize=10**6
-    )
-
-    return process, title, channel, yt_url
-
+        audio = AudioSegment.from_file(raw_file)
+        audio = audio.set_frame_rate(SAMPLE_RATE).set_channels(CHANNELS)
+        audio.export(final_wav, format="wav")
+        return final_wav, title, channel, yt_url
+    finally:
+        if os.path.exists(raw_file):
+            os.remove(raw_file)
