@@ -8,13 +8,13 @@ from dotenv import load_dotenv
 load_dotenv()
 app = FastAPI(title="Soundify API Engine")
 
-# Read frontend URL or allow wildcard CORS in production/staging
-raw_frontend_url = os.getenv("Frontend_url") or os.getenv("FRONTEND_URL") or "*"
+# Read frontend URL directly from environment variables (.env)
+raw_frontend_url = os.getenv("FRONTEND_URL") or "*"
 origins = [url.strip() for url in raw_frontend_url.split(",") if url.strip()]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins if origins else ["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
