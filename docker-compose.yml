@@ -6,26 +6,29 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: shazam-backend
+    container_name: soundify-backend
     restart: always
     environment:
       SUPABASE_URL: ${SUPABASE_URL:-}
       SUPABASE_KEY: ${SUPABASE_KEY:-}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      Frontend_url: ${Frontend_url:-http://localhost:5173}
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app/backend
       - /app/backend/__pycache__
-      - ./chunks:/app/chunks
     networks:
-      - shazam-network
+      - soundify-network
 
   # React Frontend
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: shazam-frontend
+    container_name: soundify-frontend
     restart: always
     ports:
       - "5173:5173"
@@ -35,12 +38,11 @@ services:
     depends_on:
       - backend
     networks:
-      - shazam-network
+      - soundify-network
     environment:
       VITE_API_URL: http://localhost:8000
     command: npm run dev
 
-
 networks:
-  shazam-network:
+  soundify-network:
     driver: bridge

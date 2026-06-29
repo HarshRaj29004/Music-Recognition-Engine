@@ -5,11 +5,11 @@ from fastapi import HTTPException
 import cloudinary.uploader
 from db.db import db
 from audio.AudioProcessing import AudioProcessing
-from utils.utils import BATCH, downloading_song
+from utils.utils import BATCH, downloading_song, get_temp_filepath
 
 def check_preview_match(wav_file_path: str):
     """Checks the first 30 seconds of downloaded audio against existing DB fingerprints."""
-    preview_file = f"temp_preview_{uuid.uuid4()}.wav"
+    preview_file = get_temp_filepath(f"temp_preview_{uuid.uuid4()}.wav")
     try:
         audio = AudioSegment.from_file(wav_file_path)
         # Take first 30 seconds (30,000 ms)
@@ -81,7 +81,7 @@ def process_and_index_track(url: str):
     """Main service workflow for downloading, preview matching, uploading, and indexing a YouTube track."""
     final_file = None
     try:
-        # 1. Download & convert audio to WAV
+        # 1. Download & convert audio to WAV in system temp dir
         final_file, title, channel, youtube_url = downloading_song(url)
 
         if not os.path.exists(final_file) or os.path.getsize(final_file) == 0:

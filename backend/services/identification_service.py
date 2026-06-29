@@ -3,7 +3,7 @@ from fastapi import UploadFile
 from pydub import AudioSegment, effects
 from db.db import db
 from audio.AudioProcessing import AudioProcessing
-from utils.utils import temp_file_upload
+from utils.utils import temp_file_upload, get_temp_filepath
 
 def preprocess_uploaded_clip(file: UploadFile):
     """Saves raw upload, standardizes sample rate & channels, and normalizes audio volume."""
@@ -16,8 +16,8 @@ def preprocess_uploaded_clip(file: UploadFile):
     # Normalize volume
     audio_clip = effects.normalize(audio_clip)
     
-    audio_filename = os.path.splitext(temp_file)[0]
-    cropped_file = f"{audio_filename}_processed.wav"
+    audio_filename = os.path.basename(os.path.splitext(temp_file)[0])
+    cropped_file = get_temp_filepath(f"{audio_filename}_processed.wav")
     audio_clip.export(cropped_file, format="wav")
     
     return temp_file, cropped_file

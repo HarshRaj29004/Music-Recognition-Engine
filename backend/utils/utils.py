@@ -1,6 +1,7 @@
 import os
 import shutil
 import uuid
+import tempfile
 from pydub import AudioSegment
 from fastapi import UploadFile, HTTPException
 import yt_dlp
@@ -14,12 +15,16 @@ CHUNK_SIZE = BYTES_PER_SEC * CHUNK_DURATION_SEC
 READ_SIZE = 4096  
 BATCH = 1000
 
+def get_temp_filepath(filename_suffix: str) -> str:
+    """Generates a cross-platform absolute path in the system temporary directory."""
+    return os.path.join(tempfile.gettempdir(), filename_suffix)
+
 def temp_file_upload(file: UploadFile) -> str:
     unique_id = uuid.uuid4()
     suffix = os.path.splitext(file.filename)[1] or ".tmp"
     
-    raw_tmp_path = f"temp_raw_{unique_id}{suffix}"
-    final_wav_path = f"temp_{unique_id}.wav"
+    raw_tmp_path = get_temp_filepath(f"temp_raw_{unique_id}{suffix}")
+    final_wav_path = get_temp_filepath(f"temp_{unique_id}.wav")
 
     try:
         with open(raw_tmp_path, "wb") as buffer:
@@ -36,9 +41,9 @@ def temp_file_upload(file: UploadFile) -> str:
 
 
 def downloading_song(url: str):
-    """Downloads YouTube audio reliably via yt_dlp with chunk retries and exports a standardized WAV file."""
+    """Downloads YouTube audio reliably via yt_dlp into the system temp directory."""
     unique_id = uuid.uuid4()
-    raw_template = f"temp_yt_raw_{unique_id}.%(ext)s"
+    raw_template = get_temp_filepath(f"temp_yt_raw_{unique_id}.%(ext)s")
     
     ydl_opts = {
         'format': 'bestaudio/best',
@@ -73,7 +78,7 @@ def downloading_song(url: str):
             detail=f"Unable to download audio from YouTube URL. Error: {str(e)}"
         )
 
-    final_wav = f"temp_yt_{unique_id}.wav"
+    final_wav = get_temp_filepath(f"temp_yt_{unique_id}.wav")
     try:
         if not os.path.exists(raw_file) or os.path.getsize(raw_file) == 0:
             raise HTTPException(status_code=400, detail="Downloaded audio file is empty.")
