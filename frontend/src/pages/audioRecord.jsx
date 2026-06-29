@@ -1,13 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-const RAW_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const API_URL = RAW_API_URL.replace('http://backend:8000', 'http://localhost:8000').replace('backend:8000', 'localhost:8000');
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const AudioRecord = () => {
-  // Main Navigation / Active Modal state
-  const [activeTool, setActiveTool] = useState('library'); // 'library', 'shazam', 'url'
-  
-  // Library & Music Player state
+  const [activeTool, setActiveTool] = useState('library'); 
   const [songs, setSongs] = useState([]);
   const [filteredSongs, setFilteredSongs] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,8 +13,6 @@ const AudioRecord = () => {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.8);
   const [isLoadingSongs, setIsLoadingSongs] = useState(false);
-
-  // Audio Processing states
   const [url, setUrl] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
@@ -26,14 +20,12 @@ const AudioRecord = () => {
   const [urlresponse, setUrlResponse] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-
-  // Refs
   const audioRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const timerRef = useRef(null);
 
-  // Fetch all songs from backend
+  // Fetch all songs
   const fetchSongs = async () => {
     setIsLoadingSongs(true);
     try {
@@ -134,7 +126,7 @@ const AudioRecord = () => {
     handlePlayTrack(prevTrack);
   };
 
-  // Shazam Recording Handlers
+  // Recording Handlers
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -281,7 +273,7 @@ const AudioRecord = () => {
               <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
                 Soundify <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">Player</span>
               </h1>
-              <p className="text-[11px] text-slate-400 font-medium hidden sm:block">Cloud Audio Player & Shazam Engine</p>
+              <p className="text-[11px] text-slate-400 font-medium hidden sm:block">Cloud Audio Player & Recognition Engine</p>
             </div>
           </div>
 
@@ -302,9 +294,9 @@ const AudioRecord = () => {
             </button>
 
             <button
-              onClick={() => setActiveTool('shazam')}
+              onClick={() => setActiveTool('Recognition')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-                activeTool === 'shazam'
+                activeTool === 'Recognition'
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
                   : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
               }`}
@@ -312,7 +304,7 @@ const AudioRecord = () => {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
-              🎙️ <span className="hidden sm:inline">Shazam ID</span>
+              🎙️ <span className="hidden sm:inline">Music ID</span>
             </button>
 
             <button
@@ -503,12 +495,12 @@ const AudioRecord = () => {
           </div>
         )}
 
-        {/* VIEW 2: SHAZAM AUDIO IDENTIFIER TOOL */}
-        {activeTool === 'shazam' && (
+        {/* VIEW 2: AUDIO IDENTIFIER TOOL */}
+        {activeTool ===  'Recognition' && (
           <div className="max-w-2xl mx-auto space-y-8 animate-fade-in">
             <div className="text-center">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider mb-3">
-                🎙️ Shazam Spectral Engine
+                🎙️ Spectral Engine
               </div>
               <h2 className="text-3xl font-black text-white">Identify Ambient Song</h2>
               <p className="text-slate-400 text-sm mt-1">Record audio around you to match against stored acoustic song fingerprints.</p>

@@ -1,12 +1,12 @@
 # Soundify - Music Recognition Engine & Cloud Player 🎵
 
-A full-stack acoustic fingerprinting and streaming platform that identifies ambient songs and plays curated audio tracks. Inspired by the Shazam spectral analysis algorithm, Soundify creates unique acoustic constellation fingerprints and matches them in real-time against a database of stored tracks.
+A full-stack acoustic fingerprinting and streaming platform that identifies ambient songs and plays curated audio tracks. Inspired by advanced acoustic spectral analysis algorithms, Soundify creates unique acoustic constellation fingerprints and matches them in real-time against a database of stored tracks.
 
 ---
 
 ## 🎵 Key Features
 
-- **🎙️ Acoustic Shazam Engine**: Record live ambient audio through your microphone to extract spectral constellation peaks and identify matching songs in real-time.
+- **🎙️ Acoustic Music Recognition Engine**: Record live ambient audio through your microphone to extract spectral constellation peaks and identify matching songs in real-time.
 - **🎧 Cloud Audio Library**: Stream full-length audio tracks stored in high-fidelity cloud storage with custom playback, timeline seeking, and volume controls.
 - **➕ YouTube Track Ingestion**: Enter any YouTube video URL to automatically process audio, extract acoustic fingerprints, and add the track to your streaming library.
 - **⚡ Early Duplicate Checking**: Smart preview matching analyzes the first 30 seconds of ingested tracks to prevent duplicate database entries and save processing time.
@@ -17,7 +17,7 @@ A full-stack acoustic fingerprinting and streaming platform that identifies ambi
 ## 🏗️ Project Structure
 
 ```text
-shazam/
+soundify/
 ├── backend/                          # FastAPI Backend Application
 │   ├── main.py                      # Application entrypoint & CORS middleware
 │   ├── audio/
@@ -39,7 +39,7 @@ shazam/
 │   ├── src/
 │   │   ├── App.jsx                  # Root layout & toast notifications
 │   │   ├── pages/
-│   │   │   └── audioRecord.jsx      # Music library, Shazam recorder & uploader
+│   │   │   └── audioRecord.jsx      # Music library, audio recognition recorder & uploader
 │   │   └── assets/                  # Styling & static assets
 │   ├── package.json                 # Frontend dependencies
 │   └── vite.config.js               # Vite bundler configuration
