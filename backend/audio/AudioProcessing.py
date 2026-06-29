@@ -11,7 +11,7 @@ class AudioProcessing:
     def __init__(self,audio_file_path: str):
         audio_path = audio_file_path
         audio = AudioSegment.from_file(audio_path)
-        output_file,ext = os.path.splitext(audio_path)
+        output_file,extension = os.path.splitext(audio_path)
         output_file+=".wav"
         if not audio_path.endswith(".wav") :
             audio.export(output_file, format="wav")
@@ -19,6 +19,7 @@ class AudioProcessing:
         self.Norm_int16 = 32768.0
         self.Norm_int32 = 2147483648.0
         self.mult = 2.28
+        # print(output_file)
 
     def Normalise(self,data: list):
         if data.dtype == np.int16:
@@ -30,8 +31,9 @@ class AudioProcessing:
     def converting_to_frequency_domain(self):
             if len(self.digital_audio.shape) > 1:
                 self.digital_audio = self.digital_audio.mean(axis=1)
-
+            print(self.digital_audio)
             data = self.Normalise(self.digital_audio)
+            # print(data)
             f, t, spd = spectrogram(data, fs=self.sampling_rate, nperseg=4096, noverlap=2048, window='hann')
             self.freq = f
             self.time = t

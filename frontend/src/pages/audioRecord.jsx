@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const RAW_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = RAW_API_URL.replace('http://backend:8000', 'http://localhost:8000').replace('backend:8000', 'localhost:8000');
 
 const AudioRecord = () => {
   // Main Navigation / Active Modal state
