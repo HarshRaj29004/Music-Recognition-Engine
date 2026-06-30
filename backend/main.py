@@ -2,13 +2,11 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from route.route import router
+from routes.route import router
 from dotenv import load_dotenv
 
 load_dotenv()
 app = FastAPI(title="Soundify API Engine")
-
-# Read frontend URL directly from environment variables (.env)
 raw_frontend_url = os.getenv("FRONTEND_URL") or "*"
 origins = [url.strip() for url in raw_frontend_url.split(",") if url.strip()]
 

@@ -15,17 +15,14 @@ def check_preview_match(wav_file_path: str):
         # Take first 30 seconds (30,000 ms)
         preview_clip = audio[:30000]
         preview_clip.export(preview_file, format="wav")
-
         processor = AudioProcessing(preview_file)
         processor.converting_to_frequency_domain()
         hashes = processor.hashing()
-
         hash_pairs = [
             {"input_hash": int(h), "sample_time": int(t)}
             for h, times in hashes.items()
             for t in times
         ]
-
         if hash_pairs:
             try:
                 res = db.rpc("match_audio", {"input_hashes": hash_pairs}).execute()
@@ -116,7 +113,6 @@ def process_and_index_track(url: str):
 
         # 6. Insert audio hashes
         index_hashes_to_db(song_id, final_hashes)
-
         print(f"Indexed successfully: {title}")
         return {
             "status": "Success",

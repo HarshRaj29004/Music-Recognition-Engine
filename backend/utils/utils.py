@@ -22,10 +22,8 @@ def get_temp_filepath(filename_suffix: str) -> str:
 def temp_file_upload(file: UploadFile) -> str:
     unique_id = uuid.uuid4()
     suffix = os.path.splitext(file.filename)[1] or ".tmp"
-    
     raw_tmp_path = get_temp_filepath(f"temp_raw_{unique_id}{suffix}")
     final_wav_path = get_temp_filepath(f"temp_{unique_id}.wav")
-
     try:
         with open(raw_tmp_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
@@ -44,7 +42,6 @@ def downloading_song(url: str):
     """Downloads YouTube audio reliably via yt_dlp into the system temp directory."""
     unique_id = uuid.uuid4()
     raw_template = get_temp_filepath(f"temp_yt_raw_{unique_id}.%(ext)s")
-    
     ydl_opts = {
         'format': 'bestaudio/best',
         'outtmpl': raw_template,

@@ -278,47 +278,47 @@ const AudioRecord = () => {
           </div>
 
           {/* Feature Quick Action Buttons */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto whitespace-nowrap scrollbar-none max-w-[50vw] sm:max-w-none py-1 flex-shrink-0">
             <button
               onClick={() => setActiveTool('library')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
                 activeTool === 'library'
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
                   : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
               }`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
               </svg>
-              <span className="hidden sm:inline">Music Library</span>
+              <span>Library</span>
             </button>
 
             <button
               onClick={() => setActiveTool('Recognition')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
                 activeTool === 'Recognition'
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
                   : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
               }`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
-              🎙️ <span className="hidden sm:inline">Music ID</span>
+              <span>Music ID</span>
             </button>
 
             <button
               onClick={() => setActiveTool('url')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
                 activeTool === 'url'
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
                   : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
               }`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
               </svg>
-              ➕ <span className="hidden sm:inline">Add Track</span>
+              <span>Add Track</span>
             </button>
           </div>
         </div>
@@ -407,10 +407,10 @@ const AudioRecord = () => {
               ) : (
                 <div className="divide-y divide-slate-800/60">
                   {/* Table Header */}
-                  <div className="grid grid-cols-12 px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 bg-slate-900/80">
-                    <div className="col-span-1">#</div>
-                    <div className="col-span-6 sm:col-span-7">Title & Artist</div>
-                    <div className="col-span-3 sm:col-span-3 text-right sm:text-left">Audio Status</div>
+                  <div className="grid grid-cols-12 px-4 sm:px-6 py-3.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 bg-slate-900/80">
+                    <div className="col-span-2 sm:col-span-1">#</div>
+                    <div className="col-span-8 sm:col-span-7">Title & Artist</div>
+                    <div className="hidden sm:block sm:col-span-3 text-left">Audio Status</div>
                     <div className="col-span-2 sm:col-span-1 text-right">Action</div>
                   </div>
 
@@ -423,12 +423,12 @@ const AudioRecord = () => {
                       <div
                         key={track.id || idx}
                         onClick={() => handlePlayTrack(track)}
-                        className={`grid grid-cols-12 px-6 py-4 items-center text-sm cursor-pointer transition-colors group ${
+                        className={`grid grid-cols-12 px-4 sm:px-6 py-4 items-center text-sm cursor-pointer transition-colors group ${
                           isSelected ? 'bg-blue-600/10 text-white' : 'hover:bg-slate-800/50 text-slate-300'
                         }`}
                       >
                         {/* Index / Playing Indicator */}
-                        <div className="col-span-1 font-mono text-xs text-slate-500 group-hover:text-blue-400 flex items-center">
+                        <div className="col-span-2 sm:col-span-1 font-mono text-xs text-slate-500 group-hover:text-blue-400 flex items-center">
                           {isTrackPlaying ? (
                             <div className="flex items-end gap-0.5 h-4 w-4">
                               <span className="w-1 bg-blue-500 h-full animate-bounce"></span>
@@ -441,15 +441,18 @@ const AudioRecord = () => {
                         </div>
 
                         {/* Title & Channel */}
-                        <div className="col-span-6 sm:col-span-7 pr-4">
+                        <div className="col-span-8 sm:col-span-7 pr-4">
                           <h4 className={`font-semibold truncate text-sm ${isSelected ? 'text-blue-400 font-bold' : 'text-slate-100'}`}>
                             {track.title || "Unknown Track"}
                           </h4>
                           <p className="text-xs text-slate-400 truncate mt-0.5">{track.channel || "Unknown Artist"}</p>
+                          <span className="sm:hidden inline-flex items-center gap-1 text-[10px] font-medium text-emerald-400 mt-1">
+                            {track.audio_url ? '● Streamable' : '○ Fingerprinted'}
+                          </span>
                         </div>
 
                         {/* Audio Source / Status Badge */}
-                        <div className="col-span-3 sm:col-span-3 text-right sm:text-left flex items-center">
+                        <div className="hidden sm:flex sm:col-span-3 items-center">
                           {track.audio_url ? (
                             <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
@@ -523,6 +526,11 @@ const AudioRecord = () => {
                     <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></span>
                     Recording: {formatTime(recordingTime)}
                   </div>
+                  {recordingTime < 30 && (
+                    <p className="text-xs text-slate-400 mt-4 animate-pulse">
+                      Recording 30-second minimum fingerprint sample... ({30 - recordingTime}s remaining)
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -543,7 +551,7 @@ const AudioRecord = () => {
               )}
 
               {/* Stop Recording */}
-              {isRecording && (
+              {isRecording && recordingTime >= 30 && (
                 <button
                   onClick={stopRecording}
                   className="bg-red-600 hover:bg-red-500 text-white px-8 py-3 rounded-xl font-bold text-xs shadow-lg transition-all"
@@ -675,23 +683,42 @@ const AudioRecord = () => {
 
       {/* STICKY BOTTOM MUSIC PLAYER BAR */}
       <footer className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800/80 px-4 py-3 z-50 shadow-2xl">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
           {/* Left: Track Info */}
-          <div className="flex items-center gap-3.5 w-1/4 min-w-[180px]">
-            <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-blue-400 shadow-inner flex-shrink-0">
-              <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
-                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-              </svg>
+          <div className="flex items-center gap-3 w-full sm:w-1/4 min-w-0 justify-between sm:justify-start">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-blue-400 shadow-inner flex-shrink-0">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 fill-current" viewBox="0 0 24 24">
+                  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                </svg>
+              </div>
+              <div className="truncate">
+                <h4 className="text-xs font-bold text-white truncate">{currentTrack?.title || "No track selected"}</h4>
+                <p className="text-[10px] sm:text-[11px] text-slate-400 truncate mt-0.5">{currentTrack?.channel || "Select a song from library"}</p>
+              </div>
             </div>
-            <div className="truncate">
-              <h4 className="text-xs font-bold text-white truncate">{currentTrack?.title || "No track selected"}</h4>
-              <p className="text-[11px] text-slate-400 truncate mt-0.5">{currentTrack?.channel || "Select a song from library"}</p>
-            </div>
+            
+            {/* Quick Play/Pause button for mobile */}
+            <button
+              onClick={togglePlayPause}
+              disabled={!currentTrack}
+              className="sm:hidden w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 text-white flex items-center justify-center shadow-md shadow-blue-600/30 flex-shrink-0 animate-fade-in"
+            >
+              {isPlaying ? (
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 fill-current ml-0.5" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              )}
+            </button>
           </div>
 
           {/* Center: Play Controls & Timeline Slider */}
-          <div className="flex flex-col items-center w-2/4 max-w-xl">
-            <div className="flex items-center gap-4 mb-1.5">
+          <div className="flex flex-col items-center w-full sm:w-2/4 max-w-xl">
+            <div className="hidden sm:flex items-center gap-4 mb-1.5">
               <button onClick={playPrevTrack} className="text-slate-400 hover:text-white transition-colors">
                 <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                   <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
