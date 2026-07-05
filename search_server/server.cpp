@@ -5,6 +5,7 @@
 #include <mutex>
 #include "httplib.h"
 #include "json.hpp"
+#include <cstdlib>
 
 using namespace std;
 using json = nlohmann::json;
@@ -127,7 +128,8 @@ int main() {
     svr.Post("/add", add_fingerprints);
     svr.Post("/identify", identify);
     svr.Post("/clear", clear);
-    cout << "Production C++ Audio Fingerprint Search Server is running on port 8080..." << endl;
-    svr.listen("0.0.0.0", 8080);
-    return 0;
+    const char* port_env = std::getenv("PORT");
+    int port = port_env ? std::stoi(port_env) : 8080;
+    std::cout << "Search server running on port " << port << std::endl;
+    svr.listen("0.0.0.0", port);
 }
