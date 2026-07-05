@@ -15,6 +15,8 @@ CHUNK_SIZE = BYTES_PER_SEC * CHUNK_DURATION_SEC
 READ_SIZE = 4096  
 BATCH = 1000
 
+SEARCH_SERVER_URL = os.getenv("SEARCH_SERVER_URL", "http://localhost:8080")
+
 def get_temp_filepath(filename_suffix: str) -> str:
     """Generates a cross-platform absolute path in the system temporary directory."""
     return os.path.join(tempfile.gettempdir(), filename_suffix)

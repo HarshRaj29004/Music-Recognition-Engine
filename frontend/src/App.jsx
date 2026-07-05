@@ -21,7 +21,6 @@ function App() {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.8);
   const [isLoadingSongs, setIsLoadingSongs] = useState(false);
-
   const audioRef = useRef(null);
 
   // Fetch all songs from library
@@ -133,7 +132,7 @@ function App() {
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col pb-28 selection:bg-blue-600 selection:text-white">
       <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
 
-      {/* Hidden HTML5 Audio element */}
+      {/* Audio element */}
       <audio
         ref={audioRef}
         src={currentTrack?.audio_url || ''}
@@ -142,10 +141,10 @@ function App() {
         autoPlay={isPlaying}
       />
 
-      {/* Top Header Navbar Component */}
+      {/* Navbar Component */}
       <Navbar activeTool={activeTool} setActiveTool={setActiveTool} />
 
-      {/* Main Body View Layout */}
+      {/* Body View Layout */}
       <main className="max-w-7xl mx-auto px-4 py-6 sm:px-8 flex-1 w-full">
         {activeTool === 'library' && (
           <Library
@@ -170,7 +169,7 @@ function App() {
         )}
       </main>
 
-      {/* Sticky Bottom Music Player Footer Component */}
+      {/* Music Player Footer Component */}
       <PlayMusic
         currentTrack={currentTrack}
         isPlaying={isPlaying}

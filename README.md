@@ -25,8 +25,8 @@ soundify/
 │   │   └── testing.py               # Algorithm verification tests
 │   ├── services/                    # Modular Business Service Layer
 │   │   ├── song_service.py          # Track library retrieval
-│   │   ├── indexing_service.py      # YouTube audio processing & DB indexing
-│   │   └── identification_service.py # Microphone clip preprocessing & matching
+│   │   ├── indexing_service.py      # YouTube audio processing, DB indexing & C++ sync
+│   │   └── identification_service.py # Microphone clip preprocessing & C++ search routing
 │   ├── route/
 │   │   └── route.py                 # Lightweight API routing delegators
 │   ├── db/
@@ -35,6 +35,9 @@ soundify/
 │   │   └── utils.py                 # File handling & yt-dlp audio extraction
 │   └── model/
 │       └── audio.py                 # Data models
+├── search_server/                    # High-Performance C++ Search Server
+│   ├── server.cpp                   # In-memory index, binary search & HTTP API
+│   └── Dockerfile                   # Multi-stage C++ build configuration
 ├── frontend/                        # React + Vite Frontend Application
 │   ├── src/
 │   │   ├── App.jsx                  # Root layout & toast notifications
@@ -135,7 +138,11 @@ The React application will run at `http://localhost:5173`.
 1. **Spectrogram Generation**: Converts raw 44.1kHz mono audio samples into a time-frequency log spectrogram using Short-Time Fourier Transform (STFT).
 2. **Constellation Mapping**: Extracts local spectral peak maxima using a 2D uniform filter (`scipy.ndimage.maximum_filter`) filtered by dynamic volume thresholding.
 3. **Combinatorial Hashing**: Links pairs of peak frequencies (`f1`, `f2`) and time differences (`dt`) into 32-bit uint integers.
-4. **RPC Match Scoring**: Queries Supabase PostgreSQL RPC (`match_audio`) to calculate offset consistency scores across stored candidate tracks.
+4. **Stateless C++ Query Matching**: 
+   - Queries the high-performance in-memory C++ search server (`/identify`) executing binary searches ($O(\log N)$) across a sorted array of 12-byte packed structures.
+   - Computes offset consistency peak histograms in real-time, enforcing a minimum score threshold of 10 to filter out random collisions.
+5. **Database Synchronized Fallback**: If the C++ search server is unavailable or warming up, query matching transparently falls back to Supabase PostgreSQL RPC (`match_audio`).
+6. **Pipelined Warm-up Lifecycle**: On FastAPI server startup, a background paginated sync fetches all existing Supabase hashes in chunks of 1,000 and warms up the C++ search server index.
 
 ---
 

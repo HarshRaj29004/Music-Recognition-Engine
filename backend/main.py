@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 app = FastAPI(title="Soundify API Engine")
-raw_frontend_url = os.getenv("FRONTEND_URL") or "*"
+raw_frontend_url = os.getenv("FRONTEND_URL") or os.getenv("Frontend_url") or "*"
 origins = [url.strip() for url in raw_frontend_url.split(",") if url.strip()]
 
 app.add_middleware(
@@ -17,6 +17,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+def startup_event():
+    from services.indexing_service import warmup_search_server_async
+    warmup_search_server_async()
 
 @app.get("/")
 def home():

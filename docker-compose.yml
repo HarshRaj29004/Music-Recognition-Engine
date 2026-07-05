@@ -8,18 +8,29 @@ services:
       dockerfile: Dockerfile
     container_name: soundify-backend
     restart: always
+    env_file:
+      - ./backend/.env
     environment:
-      SUPABASE_URL: ${SUPABASE_URL:-}
-      SUPABASE_KEY: ${SUPABASE_KEY:-}
-      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
-      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
-      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
-      Frontend_url: ${Frontend_url:-http://localhost:5173}
+      SEARCH_SERVER_URL: http://search-server:8080
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app/backend
       - /app/backend/__pycache__
+    depends_on:
+      - search-server
+    networks:
+      - soundify-network
+
+  # C++ Dedicated Search Server
+  search-server:
+    build:
+      context: ./search_server
+      dockerfile: Dockerfile
+    container_name: soundify-search-server
+    restart: always
+    ports:
+      - "8080:8080"
     networks:
       - soundify-network
 
@@ -41,7 +52,6 @@ services:
       - soundify-network
     environment:
       VITE_API_URL: http://localhost:8000
-    command: npm run dev
 
 networks:
   soundify-network:

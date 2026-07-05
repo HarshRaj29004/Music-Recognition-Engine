@@ -1,9 +1,10 @@
 import os
+import requests
 from fastapi import UploadFile
 from pydub import AudioSegment, effects
 from db.db import db
 from audio.AudioProcessing import AudioProcessing
-from utils.utils import temp_file_upload, get_temp_filepath, SAMPLE_RATE,CHANNELS
+from utils.utils import temp_file_upload, get_temp_filepath, SAMPLE_RATE,CHANNELS, SEARCH_SERVER_URL
 
 def preprocess_uploaded_clip(file: UploadFile):
     """Saves raw upload, standardizes sample rate & channels, and normalizes audio volume."""
@@ -37,25 +38,76 @@ def extract_audio_hashes(processed_wav_path: str):
 
 
 def query_database_matches(hash_pairs: list):
-    """Queries Supabase RPC for matching audio tracks and safely builds candidate responses."""
+    """Queries C++ Search Server (with Supabase fallback) and returns top matches above threshold."""
     if not hash_pairs:
         return {"message": "No audio fingerprints found in recording.", "match_found": False}
 
-    result = db.rpc("match_audio", {"input_hashes": hash_pairs}).execute()
-    data = result.data or []
-    if not data:
-        return {"match_found": False, "message": "No matching songs found in library."}
+    MIN_SCORE_THRESHOLD = 10
+    try:
+        payload = {
+            "hashes": [
+                {"hash": int(item["input_hash"]), "offset": int(item["sample_time"])}
+                for item in hash_pairs
+            ]
+        }
+        res = requests.post(f"{SEARCH_SERVER_URL}/identify", json=payload, timeout=5)
+        if res.status_code == 200:
+            matches = res.json() 
+            if matches:
+                filtered_matches = [m for m in matches if m["score"] >= MIN_SCORE_THRESHOLD]
+                if filtered_matches:
+                    song_ids = [m["song_id"] for m in filtered_matches]
+                    meta_res = db.table("songs").select("*").in_("id", song_ids).execute()
+                    song_metadata = {s["id"]: s for s in meta_res.data or []}
+                    candidates = []
+                    for match in filtered_matches:
+                        meta = song_metadata.get(match["song_id"])
+                        if meta:
+                            candidates.append({
+                                "song_id": match["song_id"],
+                                "score": match["score"],
+                                "title": meta["title"],
+                                "channel": meta["channel"]
+                            })
+                    
+                    if candidates:
+                        print("Query matching via C++ Search Server succeeded.")
+                        return {
+                            "match_found": True,
+                            "match_1": candidates[0] if len(candidates) > 0 else None,
+                            "match_2": candidates[1] if len(candidates) > 1 else None,
+                            "match_3": candidates[2] if len(candidates) > 2 else None,
+                        }
+                else:
+                    print("C++ Search Server returned candidates, but all were below score threshold.")
+                    return {"match_found": False, "message": "No matching songs found (low confidence)."}
+    except Exception as e:
+        print("C++ Search Server connection failure, falling back to Supabase RPC:", str(e))
 
-    match_1 = data[0] if len(data) > 0 else None
-    match_2 = data[1] if len(data) > 1 else None
-    match_3 = data[2] if len(data) > 2 else None
-    print("query_mathing")
-    return {
-        "match_found": True,
-        "match_1": match_1,
-        "match_2": match_2,
-        "match_3": match_3,
-    }
+    try:
+        result = db.rpc("match_audio", {"input_hashes": hash_pairs}).execute()
+        data = result.data or []
+        if not data:
+            return {"match_found": False, "message": "No matching songs found in library."}
+
+        filtered_data = [item for item in data if item["score"] >= MIN_SCORE_THRESHOLD]
+        if not filtered_data:
+            print("Supabase RPC returned candidates, but all were below score threshold.")
+            return {"match_found": False, "message": "No matching songs found (low confidence)."}
+
+        match_1 = filtered_data[0] if len(filtered_data) > 0 else None
+        match_2 = filtered_data[1] if len(filtered_data) > 1 else None
+        match_3 = filtered_data[2] if len(filtered_data) > 2 else None
+        print("Query matching via Supabase RPC fallback succeeded.")
+        return {
+            "match_found": True,
+            "match_1": match_1,
+            "match_2": match_2,
+            "match_3": match_3,
+        }
+    except Exception as db_err:
+        print("Supabase RPC match query failed:", str(db_err))
+        return {"match_found": False, "message": "Database lookup failed."}
 
 
 def identify_audio_sample(file: UploadFile):
